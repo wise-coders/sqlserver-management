@@ -1,0 +1,80 @@
+plugins {
+    id 'groovy'
+}
+import groovy.sql.Sql
+
+repositories {
+    flatDir name: 'localRepository', dirs: 'lib'
+}
+
+configurations {
+    driver
+}
+
+dependencies {
+    driver group: 'sql', name: 'mssql-jdbc-11.2.0.jre11'
+}
+
+URLClassLoader loader = GroovyObject.class.classLoader
+configurations.driver.each {File file ->
+    loader.addURL(file.toURI().toURL())
+}
+
+
+def static parseScript( fileName, binding ){
+    return new groovy.text.SimpleTemplateEngine().createTemplate( new FileReader( "src/main/resources/getSchemaDDL/" + fileName )).make( binding).toString()
+}
+
+void generateGetDDLProcedure( boolean asProcedure ){
+    String script = "";
+    def binding = [ "asProcedure" : asProcedure, isTempTable : false, "schemaName" : "dbo", "tableName" :"" ]
+    script += parseScript( "01-declaration.sql", binding )
+    script += parseScript( "02-tables.sql", binding )
+    script += parseScript( "03-columns.sql", binding )
+    script += parseScript( "04-partitioning.sql", binding )
+    script += parseScript( "05-primary-unique-keys.sql", binding )
+    script += parseScript( "06-constraints.sql", binding )
+    script += parseScript( "07-check-constraints.sql", binding )
+    script += parseScript( "08-foreign-keys.sql", binding )
+    script += parseScript( "09-temporal-tables.sql", binding )
+    script += parseScript( "10-external-tables.sql", binding )
+    script += parseScript( "11-memory-optimized-tables.sql", binding )
+    script += parseScript( "12-tables-end.sql", binding )
+    script += parseScript( "13-indexes.sql", binding )
+    script += parseScript( "14-rules.sql", binding )
+    script += parseScript( "15-triggers.sql", binding )
+    script += parseScript( "16-extended-properties.sql", binding )
+    binding = [ "asProcedure" : asProcedure, isTempTable : true, "schemaName" : "dbo", "tableName" :"" ]
+    script += parseScript( "17-temp-tables.sql", binding )
+    script += parseScript( "02-tables.sql", binding )
+    script += parseScript( "03-columns.sql", binding )
+    script += parseScript( "05-primary-unique-keys.sql", binding )
+    script += parseScript( "06-constraints.sql", binding )
+    script += parseScript( "07-check-constraints.sql", binding )
+    script += parseScript( "08-foreign-keys.sql", binding )
+    script += parseScript( "12-tables-end.sql", binding )
+    script += parseScript( "13-indexes.sql", binding )
+    script += parseScript( "14-rules.sql", binding )
+    script += parseScript( "15-triggers.sql", binding )
+    script += parseScript( "16-extended-properties.sql", binding )
+    script += parseScript( "18-final.sql", binding )
+    script += parseScript( "19-end.sql", binding )
+    new File(projectDir, asProcedure ? "out/SqlServerGetSchemaDDLProc.sql": "out/SqlServerGetSchemaDDL.sql").text = script
+    //println script
+}
+
+task generate{
+    generateGetDDLProcedure( false )
+    generateGetDDLProcedure( true )
+}
+
+task executeInDb {
+    def props = [user: sqlServerUser, password: sqlServerPassword, trustServerCertificate: 'true'] as Properties
+    def url = "jdbc:sqlserver://localhost;databaseName=${sqlServerDatabase}"
+    def driver = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
+    def sql = Sql.newInstance(url, props, driver)
+    sql.eachRow( new File(projectDir, "out/SqlServerGetSchemaDDL.sql").text ) {
+        println it.text
+    }
+    sql.close()
+}
