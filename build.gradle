@@ -27,7 +27,7 @@ def static parseScript( fileName, binding ){
 
 void generateGetDDLProcedure( boolean asProcedure ){
     String script = "";
-    def binding = [ "asProcedure" : asProcedure, isTempTable : false, "schemaName" : "dbo", "tableName" :"" ]
+    def binding = [ "asProcedure" : asProcedure, isTempTable : false ]
     script += parseScript( "01-declaration.sql", binding )
     script += parseScript( "02-tables.sql", binding )
     script += parseScript( "03-columns.sql", binding )
@@ -44,7 +44,7 @@ void generateGetDDLProcedure( boolean asProcedure ){
     script += parseScript( "14-rules.sql", binding )
     script += parseScript( "15-triggers.sql", binding )
     script += parseScript( "16-extended-properties.sql", binding )
-    binding = [ "asProcedure" : asProcedure, isTempTable : true, "schemaName" : "dbo", "tableName" :"" ]
+    binding = [ "asProcedure" : asProcedure, isTempTable : true ]
     script += parseScript( "17-temp-tables.sql", binding )
     script += parseScript( "02-tables.sql", binding )
     script += parseScript( "03-columns.sql", binding )
@@ -73,7 +73,9 @@ task executeInDb {
     def url = "jdbc:sqlserver://localhost;databaseName=${sqlServerDatabase}"
     def driver = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
     def sql = Sql.newInstance(url, props, driver)
-    sql.eachRow( new File(projectDir, "out/SqlServerGetSchemaDDL.sql").text ) {
+    String script = new File(projectDir, "out/SqlServerGetSchemaDDL.sql").text
+    script = script.replaceAll("__SCHEMA_NAME__", "dbo").replaceAll("__TABLE_NAME__", "")
+    sql.eachRow( script ) {
         println it.text
     }
     sql.close()

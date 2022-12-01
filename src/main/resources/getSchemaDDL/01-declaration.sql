@@ -7,15 +7,15 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE
-        @SCHEMA_NAME            VARCHAR(200) ='<% print schemaName %>',
+        @SCHEMA_NAME            VARCHAR(200) ='__SCHEMA_NAME__',
         @SCHEMA_ID              INT,
-        @TABLE_NAME             VARCHAR(200) ='<% print tableName %>',
+        @TABLE_NAME             VARCHAR(200) ='__TABLE_NAME__',
         @TABLE_ID               INT = 0;
     DECLARE @DDLScript TABLE (
         [OBJECT_ID]             INT,
         [TYPE]                  INT,
         [LINE_NO]               INT IDENTITY,
-        [LINE_TEXT]             VARCHAR(MAX) NOT NULL,
+        [LINE_TEXT]             VARCHAR(MAX),
         [LINE_PREFIX]           VARCHAR(100) NOT NULL DEFAULT '',
         [LINE_SUFFIX]           VARCHAR(100) NOT NULL DEFAULT ''
 );

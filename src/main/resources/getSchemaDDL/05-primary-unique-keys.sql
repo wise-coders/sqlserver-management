@@ -82,9 +82,8 @@ INSERT INTO @PrimaryUniqueKeys${isTempTable?'Tmp':''}
                              ) AS [index_columns_include]
                       ) AS [Index_Columns]
                 ) AS [Index_Columns]
-        WHERE [SCH].[name]  LIKE CASE WHEN @SCHEMA_NAME = ''   COLLATE SQL_Latin1_General_CP1_CI_AS THEN [SCH].[name] ELSE @SCHEMA_NAME  END
-        AND [objz].[name] LIKE CASE WHEN @TABLE_NAME = ''   COLLATE SQL_Latin1_General_CP1_CI_AS THEN [objz].[name] ELSE @TABLE_NAME END
-        AND [objz].[schema_id]= @SCHEMA_ID AND ( @TABLE_ID = 0 OR [objz].[object_id] = @TABLE_ID )
+        WHERE [SCH].[name] = @SCHEMA_NAME
+        AND ( @TABLE_ID = 0 OR [objz].[name] = @TABLE_NAME )
     ORDER BY
       [SCH].[name],
       [objz].[name],
