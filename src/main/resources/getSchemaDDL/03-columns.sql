@@ -4,12 +4,10 @@ SELECT 3, [objz].[object_id],
        WHEN [colz].[is_computed] = 1
        THEN QUOTENAME([colz].[name])
            + ' '
-           + SPACE(5*5 - LEN([colz].[name]))
            + 'AS ' + ISNULL([CALC].[definition],'')
            + CASE WHEN [CALC].[is_persisted] = 1 THEN ' PERSISTED' ELSE '' END
        ELSE QUOTENAME([colz].[name])
            + ' '
-           + SPACE(5*5 - LEN([colz].[name]))
            + UPPER(TYPE_NAME([colz].[user_type_id]))
            + CASE
             -- DATA TYPES WITH PRECISION AND SCALE
@@ -19,33 +17,26 @@ SELECT 3, [objz].[object_id],
                 + ','
                 + CONVERT(VARCHAR,[colz].[scale])
                 + ') '
-                + SPACE(6 - LEN(CONVERT(VARCHAR,[colz].[precision])
-                + ','
-                + CONVERT(VARCHAR,[colz].[scale])))
-                + SPACE(7)
-                + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
                 + CASE
                     <% if ( isTempTable ){ %>
-                    WHEN [colz].[is_identity] = 1 THEN ' IDENTITY(1,1)' ELSE '              '
+                    WHEN [colz].[is_identity] = 1 THEN ' IDENTITY' ELSE ' '
                     <% } else { %>
                     WHEN COLUMNPROPERTY ( [colz].[object_id], [colz].[name] , 'IsIdentity' ) = 0
                     THEN ''
-                    ELSE ' IDENTITY('
-                        + CONVERT(VARCHAR,ISNULL(IDENT_SEED([objz].[name]),1) )
-                        + ','
-                        + CONVERT(VARCHAR,ISNULL(IDENT_INCR([objz].[name]),1) )
-                        + ')'
+                    ELSE ' IDENTITY'
+                        + CASE
+                          WHEN ISNULL(IDENT_SEED([objz].[name]),1) = 1 AND ISNULL(IDENT_INCR([objz].[name]),1) = 1 THEN ''
+                          ELSE '(' + CONVERT(VARCHAR,ISNULL(IDENT_SEED([objz].[name]),1) ) + ',' + CONVERT(VARCHAR,ISNULL(IDENT_INCR([objz].[name]),1) ) + ')'
+                          END
                     <% } %>
                    END
-                + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
               -- DATA TYPES WITH SCALE
               WHEN TYPE_NAME([colz].[user_type_id]) IN ('datetime2','datetimeoffset','time')
               THEN CASE WHEN [colz].[scale] < 7 THEN '(' + CONVERT(VARCHAR,[colz].[scale]) + ') ' ELSE '    ' END
-                 + SPACE(4)
-                 + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
-                 + '        '
-                 + CASE  WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
+                 + ' '
+                 + CASE  WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
                  + CASE [colz].[generated_always_type]
                      WHEN 0 THEN ''
                      WHEN 1 THEN ' GENERATED ALWAYS AS ROW START'
@@ -53,97 +44,84 @@ SELECT 3, [objz].[object_id],
                      ELSE ''
                    END
                  + CASE WHEN [colz].[is_hidden] = 1 THEN ' HIDDEN' ELSE '' END
-                 + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                 + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
               -- DATA TYPES WITH NO/PRECISION/SCALE
               WHEN  TYPE_NAME([colz].[user_type_id]) IN ('float') --,'real')
               THEN
                    CASE
                    -- 53 IS DEFAULT PRECISION
                    WHEN [colz].[precision] = 53
-                   THEN SPACE(11 - LEN(CONVERT(VARCHAR,[colz].[precision])))
-                       + SPACE(7)
-                       + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
-                       + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                       + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                   THEN
+                       + SPACE(1)
+                       + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                       + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
                    ELSE '('
                        + CONVERT(VARCHAR,[colz].[precision])
                        + ') '
-                       + SPACE(6 - LEN(CONVERT(VARCHAR,[colz].[precision])))
-                       + SPACE(7) + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
-                       + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                       + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                       + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                       + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
                    END
               -- DATA TYPE WITH MAX_LENGTH
               WHEN  TYPE_NAME([colz].[user_type_id]) IN ('char','varchar','binary','varbinary')
               THEN CASE
                    WHEN  [colz].[max_length] = -1
                    THEN  '(max)'
-                        + SPACE(6 - LEN(CONVERT(VARCHAR,[colz].[max_length])))
-                        + SPACE(7) + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
                         + CASE WHEN [colz].collation_name IS NULL OR [colz].collation_name = 'SQL_Latin1_General_CP1_CI_AS' THEN '' ELSE ' COLLATE ' + [colz].collation_name END
-                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                        + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                        + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
                    ELSE '('
                         + CONVERT(VARCHAR,[colz].[max_length])
                         + ') '
-                        + SPACE(6 - LEN(CONVERT(VARCHAR,[colz].[max_length])))
-                        + SPACE(7) + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
                         -- COLLATE
                         + CASE WHEN [colz].collation_name IS NULL OR [colz].collation_name = 'SQL_Latin1_General_CP1_CI_AS' THEN '' ELSE ' COLLATE ' + [colz].collation_name END
-                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                        + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                        + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
                    END
               -- DATA TYPE WITH MAX_LENGTH
               WHEN TYPE_NAME([colz].[user_type_id]) IN ('nchar','nvarchar')
               THEN CASE
                    WHEN  [colz].[max_length] = -1
                    THEN '(max)'
-                        + SPACE(5 - LEN(CONVERT(VARCHAR,([colz].[max_length] / 2))))
-                        + SPACE(7)
-                        + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
+                        + SPACE(1)
                         + CASE WHEN [colz].collation_name IS NULL OR [colz].collation_name = 'SQL_Latin1_General_CP1_CI_AS' THEN '' ELSE ' COLLATE ' + [colz].collation_name END
-                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                        + CASE WHEN [colz].[is_nullable] = 0 THEN  ' NOT NULL' ELSE '     NULL' END
+                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                        + CASE WHEN [colz].[is_nullable] = 0 THEN  ' NOT NULL' ELSE ' NULL' END
                    ELSE '('
                         + CONVERT(VARCHAR,([colz].[max_length] / 2))
                         + ') '
-                        + SPACE(6 - LEN(CONVERT(VARCHAR,([colz].[max_length] / 2))))
-                        + SPACE(7)
-                        + SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
+                        + SPACE(1)
                         + CASE WHEN [colz].collation_name IS NULL OR [colz].collation_name = 'SQL_Latin1_General_CP1_CI_AS' THEN '' ELSE ' COLLATE ' + [colz].collation_name END
-                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                        + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                        + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                        + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
                    END
               WHEN TYPE_NAME([colz].[user_type_id]) IN ('datetime','money','text','image','real')
-              THEN SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
-                 + '              '
-                 + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                 + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+              THEN '              '
+                 + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                 + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
               --  OTHER DATA TYPE: INT, DATETIME, MONEY, CUSTOM DATA TYPE
-              ELSE SPACE(4*4 - LEN(TYPE_NAME([colz].[user_type_id])))
-                   + CASE
+              ELSE CASE
                         <% if ( isTempTable ){ %>
-                        WHEN [colz].[is_identity] = 1 THEN ' IDENTITY(1,1)' ELSE '              '
+                        WHEN [colz].[is_identity] = 1 THEN ' IDENTITY' ELSE ' '
                         <% } else { %>
                         WHEN COLUMNPROPERTY ( [colz].[object_id] , [colz].[name] , 'IsIdentity' ) = 0
                         THEN '              '
-                        ELSE ' IDENTITY('
-                            + CONVERT(VARCHAR,ISNULL(IDENT_SEED([objz].[name]),1) )
-                            + ','
-                            + CONVERT(VARCHAR,ISNULL(IDENT_INCR([objz].[name]),1) )
-                            + ')'
+                        ELSE ' IDENTITY'
+                           + CASE
+                             WHEN ISNULL(IDENT_SEED([objz].[name]),1) = 1 AND ISNULL(IDENT_INCR([objz].[name]),1) = 1 THEN ''
+                             ELSE '(' + CONVERT(VARCHAR,ISNULL(IDENT_SEED([objz].[name]),1) ) + ',' + CONVERT(VARCHAR,ISNULL(IDENT_INCR([objz].[name]),1) ) + ')'
+                             END
                         <% }%>
                         END
                    + SPACE(2)
-                   + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE '       ' END
-                   + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE '     NULL' END
+                   + CASE WHEN [colz].[is_sparse] = 1 THEN ' sparse' ELSE ' ' END
+                   + CASE WHEN [colz].[is_nullable] = 0 THEN ' NOT NULL' ELSE ' NULL' END
            END
            + CASE
                 WHEN [colz].[default_object_id] = 0
                 THEN ''
                 --ELSE ' DEFAULT '  + ISNULL(def.[definition] ,'')
                 --optional section in case NAMED default constraints are needed:
-                ELSE '  CONSTRAINT ' + QUOTENAME([DEF].[name]) + ' DEFAULT ' + ISNULL([DEF].[definition] ,'')
+                ELSE ISNULL('  CONSTRAINT ' + QUOTENAME([DEF].[name]), '') + ' DEFAULT ' + ISNULL([DEF].[definition] ,'')
                        --i thought it needed to be handled differently! NOT!
            END  --CASE cdefault
        END --iscomputed

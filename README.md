@@ -3,6 +3,8 @@
 This project creates a procedure for generating the schema or table DDL.
 This is based on Real World DBA Toolkit Version 2019-08-01 [Lowell Izaguirre lowell@stormrage.com](http://www.stormrage.com/SQLStuff/sp_GetDDL_Latest.txt).
 
+We use this in [DbSchema Database Designer](https://dbschema.com).
+
 The gradle project has two targets: 
 - generate will create in the 'out' folder a procedure or a begin...end block.
 - executeInDb will test one of them in a database
