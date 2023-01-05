@@ -3,7 +3,7 @@
   --##############################################################################
   INSERT INTO @DDLScript ( TYPE, OBJECT_ID, LINE_TEXT )
   SELECT
-      9, OBJECT_ID( @SCHEMA_NAME + '.' + @TABLE_NAME ),
+      9, [etabz].[object_id],
       CASE WHEN [etabz].[location] IS NOT NULL THEN ' LOCATION = ' + [etabz].[location] + ',' END
       + CASE WHEN [etabz].[data_source_id] IS NOT NULL THEN ' DATA_SOURCE = ' + [eds].[name] + ',' END
       + CASE WHEN [etabz].[file_format_id] IS NOT NULL THEN ' FILE_FORMAT = ' + [efs].[name] + ',' END
@@ -15,5 +15,5 @@
   LEFT JOIN [sys].[external_data_sources] [eds] ON [eds].[data_source_id] = [etabz].[data_source_id]
   LEFT JOIN [sys].[external_file_formats] [efs] ON [efs].[file_format_id] = [etabz].[file_format_id]
   WHERE
-      [etabz].[schema_id] = SCHEMA_ID(@SCHEMA_NAME)
-      AND ( @TABLE_ID = 0 OR [etabz].[name] = @TABLE_NAME );
+      [etabz].[schema_id] = @SCHEMA_ID
+      AND ( @TABLE_ID = 0 OR [etabz].[object_id] = @TABLE_ID );

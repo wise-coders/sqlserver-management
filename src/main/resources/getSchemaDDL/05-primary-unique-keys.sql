@@ -83,7 +83,7 @@ INSERT INTO @PrimaryUniqueKeys${isTempTable?'Tmp':''}
                       ) AS [Index_Columns]
                 ) AS [Index_Columns]
         WHERE [SCH].[name] = @SCHEMA_NAME
-        AND ( @TABLE_ID = 0 OR [objz].[name] = @TABLE_NAME )
+        AND ( @TABLE_ID = 0 OR [objz].[object_id] = @TABLE_ID )
     ORDER BY
       [SCH].[name],
       [objz].[name],
