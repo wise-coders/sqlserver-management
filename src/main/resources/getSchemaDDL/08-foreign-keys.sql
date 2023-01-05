@@ -16,7 +16,7 @@ SELECT
     + ' FOREIGN KEY ('
     + [ChildCollection].[ChildColumns]
     + ') REFERENCES '
-    + QUOTENAME(SCHEMA_NAME([conz].[schema_id]))
+    + QUOTENAME(OBJECT_SCHEMA_NAME([conz].[referenced_object_id]))
     + '.'
     + QUOTENAME(OBJECT_NAME([conz].[referenced_object_id]))
     + ' (' + [ParentCollection].[ParentColumns]

@@ -1,8 +1,8 @@
 --##############################################################################
 --INDEXES
 --##############################################################################
-INSERT INTO @DDLScript ( TYPE, OBJECT_ID, LINE_SUFFIX, LINE_TEXT )
-SELECT 13, [OBJECT_ID], CHAR(10) + 'GO' + CHAR(10) + CHAR(10),
+INSERT INTO @DDLScript ( TYPE, OBJECT_ID, LINE_TEXT )
+SELECT 13, [OBJECT_ID],
      CASE
          WHEN [is_primary_key] = 0 OR [is_unique] = 0
          THEN CHAR(10)
